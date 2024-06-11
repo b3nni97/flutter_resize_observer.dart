@@ -9,32 +9,42 @@ class ResizeObserver extends SingleChildRenderObjectWidget {
   /// The callback to be called when the size of [child] changes.
   final ResizeCallback onResized;
 
+  final bool notifyOnInit;
+
   const ResizeObserver({
     super.key,
     required this.onResized,
+    this.notifyOnInit = false,
     super.child,
   });
 
   @override
   RenderObject createRenderObject(BuildContext context) =>
-      _RenderResizeObserver(onLayoutChangedCallback: onResized);
+      _RenderResizeObserver(
+        onLayoutChangedCallback: onResized,
+        notifyOnInit: notifyOnInit,
+      );
 }
 
 class _RenderResizeObserver extends RenderProxyBox {
   final ResizeCallback onLayoutChangedCallback;
+  final bool notifyOnInit;
 
   _RenderResizeObserver({
     RenderBox? child,
     required this.onLayoutChangedCallback,
+    required this.notifyOnInit,
   }) : super(child);
 
-  late var _oldSize = size;
+  Size? _oldSize;
 
   @override
   void performLayout() {
     super.performLayout();
     if (size != _oldSize) {
-      onLayoutChangedCallback(_oldSize, size);
+      if (_oldSize != null || (_oldSize == null && notifyOnInit)) {
+        onLayoutChangedCallback(_oldSize ?? size, size);
+      }
       _oldSize = size;
     }
   }
